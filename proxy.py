@@ -99,44 +99,6 @@ async def process_batch():
 async def startup_event():
     asyncio.create_task(process_batch())
 
-@app.post("/proxy_classify")
-async def proxy_classify(req: ProxyRequest):
-    """
-    Ultra-optimized proxy with length-aware priority batching.
-    
-    Advanced optimizations:
-    - Length-based request prioritization (small/medium/large queues)
-    - Smart batching strategies for optimal server utilization
-    - 1ms batch formation cycles for maximum responsiveness
-    - Intelligent request packing to minimize processing time
-    """
-    # Create a future for this request
-    future = asyncio.Future()
-    
-    # Categorize by string length for optimal batching
-    seq_len = len(req.sequence)
-    request_obj = {
-        'sequence': req.sequence,
-        'future': future
-    }
-    
-    with pending_lock:
-        if seq_len <= 12:
-            small_requests.append(request_obj)
-            # Immediate processing trigger for small requests (lower threshold)
-            if len(small_requests) >= 4:
-                asyncio.create_task(process_immediate_batch())
-        elif seq_len <= 20:
-            medium_requests.append(request_obj)
-            # Process medium requests when we have 2 (more aggressive)
-            if len(medium_requests) >= 2:
-                asyncio.create_task(process_immediate_batch())
-        else:
-            large_requests.append(request_obj)
-            # Process large requests immediately with any small padding
-            if large_requests and len(small_requests) >= 1:
-                asyncio.create_task(process_immediate_batch())
-
 async def process_immediate_batch():
     """Process a batch immediately when triggered"""
     batch = []
